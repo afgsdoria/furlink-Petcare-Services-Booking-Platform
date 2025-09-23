@@ -1,0 +1,19 @@
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #002b80;
+  color: white;
+}
+
+.left a,
+.right a {
+  margin-left: 1rem;
+  color: white;
+  text-decoration: none;
+}
+
+.right {
+  display: flex;
+  gap: 1rem;
+}

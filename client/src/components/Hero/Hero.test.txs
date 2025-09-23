@@ -1,0 +1,16 @@
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import Hero from "./Hero";
+
+test("renders hero with heading and book now button", () => {
+  render(
+    <MemoryRouter>
+      <Hero />
+    </MemoryRouter>
+  );
+
+  expect(
+    screen.getByText(/link with service providers in just one click/i)
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /book now/i })).toBeInTheDocument();
+});
