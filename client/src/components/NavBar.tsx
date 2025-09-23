@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styles from "../styles/NavBar.module.css";
 
 const NavBar: React.FC = () => {
@@ -6,9 +7,9 @@ const NavBar: React.FC = () => {
     <nav className={styles.navbar}>
       <div className={styles.logo}>furlink</div>
       <div className={styles.links}>
-        <a href="#about">About furlink</a>
-        <a href="/signup">Sign Up</a>
-        <a href="/login">Login</a>
+        <Link to="/">About furlink</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/signup" className={styles.signupBtn}>Sign Up</Link>
       </div>
     </nav>
   );

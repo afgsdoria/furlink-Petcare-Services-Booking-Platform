@@ -1,16 +1,13 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import styles from "../styles/Hero.module.css";
 
-const Hero: React.FC = () => {
+const Hero = () => {
   return (
     <section className={styles.hero}>
       <h1>Link with service providers in just one click</h1>
-      <button
-        className={styles.ctaButton}
-        onClick={() => (window.location.href = "/signup")}
-      >
+      <Link to="/signup" className={styles.ctaButton}>
         Book Now
-      </button>
+      </Link>
     </section>
   );
 };

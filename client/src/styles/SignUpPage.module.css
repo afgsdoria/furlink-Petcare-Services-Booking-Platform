@@ -1,0 +1,148 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f9fafc;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 3rem auto 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  flex-grow: 1;
+}
+
+h2 {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+.field {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.field input:focus {
+  outline: none;
+  border: 1px solid #004aad;
+}
+
+.passwordWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.passwordWrapper input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.iconBtn {
+  position: absolute;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.checkbox input {
+  margin-right: 0.5rem;
+}
+
+.submitBtn {
+  padding: 0.9rem;
+  background: #004aad;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.submitBtn:hover {
+  background: #003c8a;
+}
+
+.submitBtn:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d93025;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+/* 📱 Mobile responsiveness */
+@media (max-width: 600px) {
+  .container {
+    margin: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+  }
+
+  .submitBtn {
+    font-size: 0.95rem;
+    padding: 0.8rem;
+  }
+}
