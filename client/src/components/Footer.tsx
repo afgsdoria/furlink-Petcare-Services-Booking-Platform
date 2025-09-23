@@ -1,11 +1,11 @@
-import styles from "./Footer.module.css";
+import React from "react";
+import styles from "../styles/Footer.module.css";
 
-function Footer() {
+const Footer: React.FC = () => {
   return (
     <footer className={styles.footer}>
       <div className={styles.left}>
-        <p>© 2025 furlink</p>
-        <a href="/terms">Terms and Conditions</a>
+        © 2025 furlink | <a href="/terms">Terms and Conditions</a> |{" "}
         <a href="/privacy">Privacy Policy</a>
       </div>
       <div className={styles.right}>
@@ -19,6 +19,6 @@ function Footer() {
       </div>
     </footer>
   );
-}
+};
 
 export default Footer;
