@@ -1,0 +1,59 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dashboard-content {
+  flex: 1;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.dashboard-content h1 {
+  font-size: 2rem;
+  color: #1d4ed8;
+  margin-bottom: 1rem;
+}
+
+.dashboard-content p {
+  color: #374151;
+  margin-bottom: 2rem;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid #2563eb;
+  color: #2563eb;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #2563eb;
+  color: white;
+}
