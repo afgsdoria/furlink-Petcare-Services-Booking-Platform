@@ -1,125 +1,165 @@
-.signup-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+:root {
+  --primary-blue: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent-yellow: #fbbf24;
+  --text-dark: #111827;
+  --text-gray: #6b7280;
+  --border: #e5e7eb;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
 }
 
+/* Page container */
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-light, #f9fafb);
+}
+
+/* Center form */
 .signup-container {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
-  background: linear-gradient(to bottom right, #f0f9ff, #ecfdf5);
+  padding: 2rem 1rem;
 }
 
+/* Form box */
 .signup-form {
-  background: white;
+  background: var(--white);
+  width: 100%;
+  max-width: 480px;
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
+  box-shadow: var(--shadow-lg);
 }
 
 .signup-form h2 {
-  text-align: center;
-  font-size: 1.75rem;
+  font-size: 1.8rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
-}
-
-.subtitle {
+  color: var(--text-dark);
   text-align: center;
-  color: #6b7280;
-  margin-bottom: 1.5rem;
 }
 
+.signup-form .subtitle {
+  text-align: center;
+  color: var(--text-gray);
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Form groups */
 .form-row {
   display: flex;
   gap: 1rem;
 }
 
-.form-row .form-group {
-  flex: 1;
-}
-
 .form-group {
-  margin-bottom: 1rem;
-  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.25rem;
 }
 
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group input[type="date"],
-.form-group input[type="password"] {
-  width: 100%;
-  padding: 0.75rem 1rem;
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
+  font-size: 1rem;
   outline: none;
-  transition: border 0.2s ease;
+  transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: #2563eb;
+  border-color: var(--primary-blue);
 }
 
+/* Error messages always below input */
+.error {
+  margin-top: 0.35rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+/* Password field with toggle */
 .password-field {
-  display: flex;
-  align-items: center;
+  position: relative;
 }
 
-.toggle-password {
+.password-field .toggle-password {
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
   font-size: 1.2rem;
+  color: var(--text-gray);
 }
 
-.error {
-  font-size: 0.85rem;
-  color: #dc2626;
-  margin-top: 0.25rem;
-}
-
-.error.general {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.checkbox {
-  display: flex;
+/* Checkbox row */
+.form-group.checkbox {
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
 }
 
-.btn-primary {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+.form-group.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.form-group.checkbox label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+/* Submit button */
+.signup-form .btn-primary {
   width: 100%;
+  padding: 0.85rem;
+  background: var(--gradient-primary, linear-gradient(135deg, #2563eb, #1d4ed8));
+  color: var(--white);
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: var(--transition);
 }
 
-.btn-primary:hover {
-  background: #1d4ed8;
+.signup-form .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
+.redirect-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.redirect-link {
+  color: #0077cc;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.redirect-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
 @media (max-width: 640px) {
   .form-row {
     flex-direction: column;
-  }
-
-  .signup-form {
-    padding: 1.5rem;
   }
 }

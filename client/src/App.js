@@ -5,6 +5,7 @@ import LandingPage from "./pages/auth/LandingPage";
 import SignUpPage from "./pages/auth/SignUpPage";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/auth/Dashboard";
+import AboutPage from "./pages/auth/AboutPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         {/* add later: */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Router>
   );

@@ -820,4 +820,12 @@
   .user-types {
     flex-direction: column;
   }
+
+  .header-left img.header-logo {
+    height: 65px;    /* match your Figma height */
+    width: auto;     /* auto keeps proportions */
+    max-width: 120px; /* prevents oversized scaling on big screens */
+    object-fit: contain;
+    cursor: pointer;
+  }
 }

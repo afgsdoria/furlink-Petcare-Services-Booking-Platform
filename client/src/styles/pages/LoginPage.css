@@ -1,108 +1,152 @@
-.login-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+:root {
+  --primary-blue: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent-yellow: #fbbf24;
+  --text-dark: #111827;
+  --text-gray: #6b7280;
+  --border: #e5e7eb;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
 }
 
+/* Page container */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-light, #f9fafb);
+}
+
+/* Center form */
 .login-container {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 2rem 1rem;
 }
 
+/* Form box */
 .login-form {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  background: var(--white);
   width: 100%;
-  max-width: 400px;
-  text-align: center;
+  max-width: 420px;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
 }
 
 .login-form h2 {
   font-size: 1.8rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  color: var(--text-dark);
+  text-align: center;
 }
 
 .login-form .subtitle {
+  text-align: center;
+  color: var(--text-gray);
+  margin-bottom: 2rem;
   font-size: 0.95rem;
-  color: #666;
-  margin-bottom: 1.5rem;
 }
 
+/* Form groups */
 .form-group {
-  margin-bottom: 1rem;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.25rem;
 }
 
 .form-group input {
-  width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
   font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-blue);
+}
+
+/* Error messages always below input */
+.error {
+  margin-top: 0.35rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+/* Password field with toggle */
+.password-field {
+  position: relative;
 }
 
 .password-field .toggle-password {
   position: absolute;
-  right: 10px;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
+  background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.1rem;
-  color: #666;
+  font-size: 1.2rem;
+  color: var(--text-gray);
 }
 
-.error {
-  color: red;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  text-align: left;
+/* Checkbox row (optional: remember me, etc.) */
+.form-group.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.btn-primary {
+.form-group.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.form-group.checkbox label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+/* Submit button */
+.login-form .btn-primary {
   width: 100%;
-  padding: 0.9rem;
-  background: #2563eb;
-  color: white;
+  padding: 0.85rem;
+  background: var(--gradient-primary, linear-gradient(135deg, #2563eb, #1d4ed8));
+  color: var(--white);
   border: none;
-  border-radius: 8px;
+  border-radius: 0.75rem;
+  font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: var(--transition);
 }
 
-.btn-primary:hover {
-  background: #1d4ed8;
+.login-form .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
-.signup-link {
+.redirect-text {
   margin-top: 1rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  color: #555;
 }
 
-.signup-link .link {
-  color: #2563eb;
-  font-weight: 500;
+.redirect-link {
+  color: #0077cc;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.signup-link .link:hover {
+.redirect-link:hover {
   text-decoration: underline;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .login-form {
-    padding: 1.5rem;
-  }
-
-  .login-form h2 {
-    font-size: 1.5rem;
-  }
 }

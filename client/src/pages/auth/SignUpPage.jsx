@@ -256,6 +256,15 @@ const SignUpPage = () => {
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Creating..." : "Create Account"}
           </button>
+
+          {/* Link to Login */}
+          <p className="redirect-text">
+            Already have an account?{" "}
+            <span className="redirect-link" onClick={() => navigate("/login")}>
+              Login here
+            </span>
+          </p>
+
         </form>
       </div>
 

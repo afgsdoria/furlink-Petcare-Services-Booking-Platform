@@ -1,47 +1,109 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabase";
 import "../../styles/pages/LoginPage.css";
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // ✅ import icons
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [lockUntil, setLockUntil] = useState(null);
+
+  const [showPassword, setShowPassword] = useState(false); // ✅ add state
+
+  useEffect(() => {
+    if (lockUntil && Date.now() > lockUntil) {
+      // Unlock after timer expires
+      setLockUntil(null);
+      setAttempts(0);
+    }
+  }, [lockUntil]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validate = () => {
+    let newErrors = {};
+    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      newErrors.email = "Enter a valid email address.";
+    }
+    if (!formData.password) {
+      newErrors.password = "Password is required.";
+    }
+    return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
+
+    // Check lockout
+    if (lockUntil && Date.now() < lockUntil) {
+      setErrors({
+        general: `Too many failed attempts. Please try again in ${Math.ceil(
+          (lockUntil - Date.now()) / 1000
+        )} seconds.`,
+      });
+      return;
+    }
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
 
-      if (data.user) {
-        await supabase.from("user_sessions").insert([
-          {
-            user_id: data.user.id,
-            ip_address: window.location.hostname,
-            user_agent: navigator.userAgent,
-          },
-        ]);
-        navigate("/dashboard");
+        if (newAttempts === 3) {
+          setLockUntil(Date.now() + 60 * 1000); // 1 min lock
+          setErrors({
+            general: "Too many failed attempts. Locked for 1 minute.",
+          });
+        } else if (newAttempts >= 4) {
+          setLockUntil(Date.now() + 5 * 60 * 1000); // 5 mins lock
+          setErrors({
+            general: "Too many failed attempts. Locked for 5 minutes.",
+          });
+        } else {
+          setErrors({ general: "Invalid email or password." });
+        }
+        return;
       }
+
+      // Reset attempts after successful login
+      setAttempts(0);
+      setLockUntil(null);
+
+      navigate("/dashboard");
     } catch (err) {
-      setError("Invalid email or password.");
+      setErrors({ general: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -49,11 +111,12 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <Header />
+      <Header hideLogin={true} />
+
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
-          <h2>Login</h2>
-          {error && <p className="error">{error}</p>}
+          <h2>Welcome Back</h2>
+          <p className="subtitle">Login to access your FurLink account</p>
 
           <div className="form-group">
             <input
@@ -63,23 +126,44 @@ const LoginPage = () => {
               value={formData.email}
               onChange={handleChange}
             />
+            {errors.email && <p className="error">{errors.email}</p>}
           </div>
 
-          <div className="form-group">
+          <div className="form-group password-field">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // ✅ toggle here
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
+              required
             />
+            <button
+              type="button"
+              className="toggle-password"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+            {errors.password && <p className="error">{errors.password}</p>}
           </div>
+
+          {errors.general && <p className="error general">{errors.general}</p>}
 
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
+
+          {/* Link to Sign Up */}
+          <p className="redirect-text">
+            Don’t have an account?{" "}
+            <span className="redirect-link" onClick={() => navigate("/signup")}>
+              Sign up here
+            </span>
+          </p>
         </form>
       </div>
+
       <Footer />
     </div>
   );
