@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../config/supabase";
-import Header from "../../components/Header";
+import Header from "../../components/LoggedInNavbar";
 import Footer from "../../components/Footer";
 
 const Dashboard = () => {

@@ -1,45 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { supabase } from "../../config/supabase";
 import "../../styles/pages/LoginPage.css";
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // ✅ import icons
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockUntil, setLockUntil] = useState(null);
 
-  const [showPassword, setShowPassword] = useState(false); // ✅ add state
-
-  useEffect(() => {
-    if (lockUntil && Date.now() > lockUntil) {
-      // Unlock after timer expires
-      setLockUntil(null);
-      setAttempts(0);
-    }
-  }, [lockUntil]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validate = () => {
-    let newErrors = {};
+    const newErrors = {};
     if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       newErrors.email = "Enter a valid email address.";
     }
@@ -56,7 +40,7 @@ const LoginPage = () => {
     // Check lockout
     if (lockUntil && Date.now() < lockUntil) {
       setErrors({
-        general: `Too many failed attempts. Please try again in ${Math.ceil(
+        general: `Too many failed attempts. Try again in ${Math.ceil(
           (lockUntil - Date.now()) / 1000
         )} seconds.`,
       });
@@ -70,9 +54,8 @@ const LoginPage = () => {
     }
 
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
@@ -81,15 +64,10 @@ const LoginPage = () => {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
 
-        if (newAttempts === 3) {
-          setLockUntil(Date.now() + 60 * 1000); // 1 min lock
+        if (newAttempts >= 3) {
+          setLockUntil(Date.now() + 60 * 1000); // 1 min lockout
           setErrors({
             general: "Too many failed attempts. Locked for 1 minute.",
-          });
-        } else if (newAttempts >= 4) {
-          setLockUntil(Date.now() + 5 * 60 * 1000); // 5 mins lock
-          setErrors({
-            general: "Too many failed attempts. Locked for 5 minutes.",
           });
         } else {
           setErrors({ general: "Invalid email or password." });
@@ -97,9 +75,8 @@ const LoginPage = () => {
         return;
       }
 
-      // Reset attempts after successful login
-      setAttempts(0);
-      setLockUntil(null);
+      // Success → save session
+      localStorage.setItem("token", data.session.access_token);
 
       navigate("/dashboard");
     } catch (err) {
@@ -131,12 +108,11 @@ const LoginPage = () => {
 
           <div className="form-group password-field">
             <input
-              type={showPassword ? "text" : "password"} // ✅ toggle here
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              required
             />
             <button
               type="button"
