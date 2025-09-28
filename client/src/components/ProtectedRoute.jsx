@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../config/supabase";
+
+const PUBLIC_ROUTES = ["/", "/about", "/login", "/signup"];
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -36,6 +39,12 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) return <p>Checking authentication...</p>;
 
+  // If current route is public, just render it
+  if (PUBLIC_ROUTES.includes(location.pathname)) {
+    return children;
+  }
+
+  // Otherwise, enforce authentication
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
