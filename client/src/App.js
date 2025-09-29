@@ -7,6 +7,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/auth/Dashboard";
 import AboutPage from "./pages/auth/AboutPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ServiceSetupPage from "./pages/ServiceSetupPage";
 
 function App() {
   return (
@@ -15,6 +16,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
+
+        {/* ✅ Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -23,6 +26,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/service-setup"
+          element={
+            <ProtectedRoute>
+              <ServiceSetupPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Router>
