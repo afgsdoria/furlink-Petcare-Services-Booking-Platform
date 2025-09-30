@@ -1,213 +1,166 @@
+// src/pages/ServiceSetupPage.jsx
 import React, { useState } from "react";
-import { FaUpload } from "react-icons/fa";
+import { supabase } from "../config/supabase";
 import LoggedInNavbar from "../components/LoggedInNavbar";
 import Footer from "../components/Footer";
-import "../styles/pages/ServiceSetupPage.css";
 
 const ServiceSetupPage = () => {
-  const [step, setStep] = useState(1);
-  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    businessName: "",
+    businessEmail: "",
+    businessMobile: "",
+    houseStreet: "",
+    barangay: "",
+    city: "",
+    province: "",
+    postalCode: "",
+    country: "Philippines",
+    typeOfService: "Pet Grooming Service",
+    waiver: null,
+    permits: [],
+    payments: [],
+    staff: [],
+    hours: [],
+    services: []
+  });
 
-  const handleNext = () => setStep(step + 1);
-  const handleBack = () => setStep(step - 1);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e, field, multiple = false) => {
+    const files = Array.from(e.target.files);
+    setFormData((prev) => ({
+      ...prev,
+      [field]: multiple ? [...prev[field], ...files] : files[0],
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowModal(true);
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("User not authenticated");
+
+      // 1. Insert into service_providers
+      const { data: provider, error: providerError } = await supabase
+        .from("service_providers")
+        .insert([
+          {
+            user_id: user.id,
+            business_name: formData.businessName,
+            business_email: formData.businessEmail,
+            business_mobile: formData.businessMobile,
+            house_street: formData.houseStreet,
+            barangay: formData.barangay,
+            city: formData.city,
+            province: formData.province,
+            postal_code: formData.postalCode,
+            country: formData.country,
+            type_of_service: formData.typeOfService,
+          }
+        ])
+        .select()
+        .single();
+
+      if (providerError) throw providerError;
+
+      const providerId = provider.id;
+
+      // 2. Insert staff
+      if (formData.staff.length > 0) {
+        const staffRows = formData.staff.map((s) => ({
+          provider_id: providerId,
+          full_name: s.fullName,
+          job_title: s.jobTitle,
+        }));
+        await supabase.from("service_provider_staff").insert(staffRows);
+      }
+
+      // 3. Insert operating hours
+      if (formData.hours.length > 0) {
+        const hourRows = formData.hours.map((h) => ({
+          provider_id: providerId,
+          day_of_week: h.day,
+          start_time: h.start,
+          end_time: h.end,
+        }));
+        await supabase.from("service_provider_hours").insert(hourRows);
+      }
+
+      // 4. Insert services + options
+      for (const service of formData.services) {
+        const { data: insertedService, error: serviceError } = await supabase
+          .from("services")
+          .insert([
+            {
+              provider_id: providerId,
+              type: service.type,
+              name: service.name,
+              description: service.description,
+              notes: service.notes,
+            }
+          ])
+          .select()
+          .single();
+
+        if (serviceError) throw serviceError;
+
+        if (service.options?.length > 0) {
+          const optionRows = service.options.map((opt) => ({
+            service_id: insertedService.id,
+            pet_type: opt.petType,
+            size: opt.size,
+            weight_range: opt.weightRange,
+            price: opt.price,
+          }));
+          await supabase.from("service_options").insert(optionRows);
+        }
+      }
+
+      setMessage("Application submitted successfully and pending approval!");
+    } catch (err) {
+      console.error("Error submitting application:", err.message);
+      setMessage("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <>
-      <LoggedInNavbar hideProviderBtn={true} />
-      <div className="service-setup-container">
-        <h2>Service Provider Application</h2>
-
-        <form className="service-form" onSubmit={handleSubmit}>
-          {/* STEP 1: Business Info */}
-          {step === 1 && (
-            <>
-              {/* Row 1 */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    Business Name <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    Business Email <span className="required">*</span>
-                  </label>
-                  <input type="email" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    Business Mobile Number <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-              </div>
-
-              {/* Row 2: Address */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    House No. & Street <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    Barangay <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    City/Municipality <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    Province <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>
-                    Postal Code <span className="required">*</span>
-                  </label>
-                  <input type="text" required />
-                </div>
-                <div className="form-group">
-                  <label>Country</label>
-                  <input type="text" value="Philippines" disabled />
-                </div>
-              </div>
-
-              {/* Row 3 */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Type of Service</label>
-                  <input type="text" value="Pet Grooming Service" disabled />
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    Business Facilities <span className="required">*</span>
-                  </label>
-                  <div className="file-upload">
-                    <FaUpload className="upload-icon" />
-                    <input type="file" multiple />
-                  </div>
-                  <p className="field-note">
-                    Upload up to 10 pictures of your facilities.
-                  </p>
-                </div>
-
-                <div className="form-group">
-                  <label>Business Waiver</label>
-                  <div className="file-upload">
-                    <FaUpload className="upload-icon" />
-                    <input type="file" />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    Business Permits <span className="required">*</span>
-                  </label>
-                  <div className="file-upload">
-                    <FaUpload className="upload-icon" />
-                    <input type="file" multiple />
-                  </div>
-                  <p className="field-note">
-                    You may upload a DTI, Mayor's, and BIR Permit.
-                  </p>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    Payment Methods <span className="required">*</span>
-                  </label>
-                  <div className="file-upload">
-                    <FaUpload className="upload-icon" />
-                    <input type="file" multiple />
-                  </div>
-                  <p className="field-note">
-                    Upload Payment Method where you want to receive customer's
-                    down payment.
-                  </p>
-                </div>
-              </div>
-
-              {/* Row 4: Staff */}
-              <div className="form-group">
-                <label>
-                  Groomer/Staff Information <span className="required">*</span>
-                </label>
-                <div className="staff-row">
-                  <input type="text" placeholder="Name" required />
-                  <input type="number" placeholder="Years of Experience" required />
-                  <input type="text" placeholder="Skills" required />
-                  <button type="button" className="small-add-btn">
-                    + Add More Staff
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="next-btn" onClick={handleNext}>
-                  Next
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* STEP 2 remains unchanged */}
-          {step === 2 && (
-            <>
-              {/* ... service offerings code here (unchanged) ... */}
-              <div className="form-actions">
-                <button type="button" className="back-btn" onClick={handleBack}>
-                  Back
-                </button>
-                <button type="submit" className="submit-btn">
-                  Submit Application
-                </button>
-              </div>
-            </>
-          )}
-        </form>
-      </div>
-
-      <Footer />
-
-      {/* Confirmation Modal */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Application Submitted</h3>
-            <p>Your application has been submitted for review by the admin.</p>
-            <div className="modal-actions">
-              <button
-                onClick={() => (window.location.href = "/dashboard")}
-                className="back-btn"
-              >
-                Go to Dashboard
-              </button>
-              <button
-                onClick={() => (window.location.href = "/")}
-                className="next-btn"
-              >
-                Home
-              </button>
-            </div>
+    <div>
+      <LoggedInNavbar />
+      <div className="setup-container">
+        <h2>Become a Service Provider</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>
+              Business Name <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              name="businessName"
+              value={formData.businessName}
+              onChange={handleChange}
+              required
+            />
           </div>
-        </div>
-      )}
-    </>
+          {/* Add other inputs here (business email, mobile, address, etc.) */}
+          <button type="submit" disabled={loading} className="submit-btn">
+            {loading ? "Submitting..." : "Submit Application"}
+          </button>
+        </form>
+        {message && <p>{message}</p>}
+      </div>
+      <Footer />
+    </div>
   );
 };
 
