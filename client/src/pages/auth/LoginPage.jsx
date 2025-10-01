@@ -75,10 +75,26 @@ const LoginPage = () => {
         return;
       }
 
-      // Success → save session
+      // ✅ Success: fetch profile role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        setErrors({ general: "Unable to fetch user role." });
+        return;
+      }
+
+      // Store token for protected routes
       localStorage.setItem("token", data.session.access_token);
 
-      navigate("/dashboard");
+      if (profile.role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setErrors({ general: "Something went wrong. Please try again." });
     } finally {
@@ -130,7 +146,6 @@ const LoginPage = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          {/* Link to Sign Up */}
           <p className="redirect-text">
             Don’t have an account?{" "}
             <span className="redirect-link" onClick={() => navigate("/signup")}>

@@ -8,6 +8,7 @@ import Dashboard from "./pages/auth/Dashboard";
 import AboutPage from "./pages/auth/AboutPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ServiceSetupPage from "./pages/ServiceSetupPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function App() {
   return (
@@ -16,8 +17,6 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
-
-        {/* ✅ Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -34,7 +33,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        {/* Admin route */}
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Router>
