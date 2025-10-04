@@ -9,6 +9,8 @@ import AboutPage from "./pages/auth/AboutPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ServiceSetupPage from "./pages/ServiceSetupPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminChangePassword from "./pages/admin/AdminChangePassword";
+
 
 function App() {
   return (
@@ -39,6 +41,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-change-password"
+          element={
+            <ProtectedRoute>
+              <AdminChangePassword />
             </ProtectedRoute>
           }
         />

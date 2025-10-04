@@ -75,15 +75,15 @@ const LoginPage = () => {
         return;
       }
 
-      // ✅ Success: fetch profile role
+      // ✅ Success: fetch profile role & must_change_password
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, must_change_password")
         .eq("id", data.user.id)
         .single();
 
       if (profileError || !profile) {
-        setErrors({ general: "Unable to fetch user role." });
+        setErrors({ general: "Unable to fetch user profile." });
         return;
       }
 
@@ -91,7 +91,11 @@ const LoginPage = () => {
       localStorage.setItem("token", data.session.access_token);
 
       if (profile.role === "admin") {
-        navigate("/admin-dashboard");
+        if (profile.must_change_password) {
+          navigate("/admin-change-password");
+        } else {
+          navigate("/admin-dashboard");
+        }
       } else {
         navigate("/dashboard");
       }
