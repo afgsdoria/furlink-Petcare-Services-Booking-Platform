@@ -271,6 +271,12 @@
   cursor: not-allowed;
 }
 
+.day-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #e0e0e0 !important;
+}
+
 .add-btn,
 .add-price-btn,
 .add-timeslot-btn {
@@ -293,6 +299,20 @@
 
 .add-timeslot-btn {
   margin-top: 1rem;
+}
+
+.add-timeslot-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+
+.info-message {
+  display: block;
+  color: #666;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
 .service-type-buttons,
@@ -495,6 +515,22 @@
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+.validation-error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  display: block;
+  color: #c33;
+  font-size: 0.875rem;
+  margin-top: 4px;
 }
 
 @media (max-width: 1024px) {

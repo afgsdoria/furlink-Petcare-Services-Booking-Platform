@@ -3,9 +3,9 @@ import { X, Upload } from "lucide-react";
 import Header from "../components/LoggedInNavbar";
 import Footer from "../components/Footer";
 import "../styles/ServiceSetupPage.css";
+import { supabase } from "../config/supabase";
 
-const petSizes = ["xs", "s", "m", "l", "xl"];
-const petTypes = ["dog", "cat"];
+const petSizes = ["all", "xs", "s", "m", "l", "xl", "cat"];
 
 export function validateBusinessInfo(
   businessInfo,
@@ -41,7 +41,9 @@ export function validateServiceInfo(services) {
   for (let service of services) {
     if (!service.name.trim() || !service.description.trim()) return false;
     if (service.options.length === 0) return false;
-    for (let option of service.options) {
+    
+    for (let i = 0; i < service.options.length; i++) {
+      const option = service.options[i];
       if (
         !option.petType ||
         !option.size ||
@@ -50,6 +52,35 @@ export function validateServiceInfo(services) {
         isNaN(Number(option.price))
       )
         return false;
+      
+      if (option.size !== "cat" && option.size !== "all") {
+        if (!option.minWeight || !option.maxWeight) return false;
+        if (parseFloat(option.minWeight) < 1) return false;
+        if (parseFloat(option.maxWeight) <= parseFloat(option.minWeight)) return false;
+      }
+      
+      if ((option.size !== "cat" && option.size !== "all") || (option.minWeight !== 0 && option.maxWeight !== 0)) {
+        for (let j = i + 1; j < service.options.length; j++) {
+          const otherOption = service.options[j];
+          if (otherOption.petType !== option.petType) continue;
+          if (otherOption.size === "cat" && otherOption.minWeight === 0) continue;
+          if (otherOption.size === "all" && otherOption.minWeight === 0) continue;
+          if (!otherOption.minWeight || !otherOption.maxWeight) continue;
+          
+          const currentMin = parseFloat(option.minWeight);
+          const currentMax = parseFloat(option.maxWeight);
+          const otherMin = parseFloat(otherOption.minWeight);
+          const otherMax = parseFloat(otherOption.maxWeight);
+          
+          if (
+            (currentMin > otherMin && currentMin < otherMax) ||
+            (currentMax > otherMin && currentMax < otherMax) ||
+            (currentMin < otherMin && currentMax > otherMax)
+          ) {
+            return false;
+          }
+        }
+      }
     }
   }
   return true;
@@ -57,18 +88,12 @@ export function validateServiceInfo(services) {
 
 export default function ServiceSetupPage() {
   const [step, setStep] = useState(1);
-
   const [businessInfo, setBusinessInfo] = useState({
     businessName: "",
     businessEmail: "",
     businessMobile: "",
-    operatingHours: [
-      {
-        days: [],
-        startTime: "9:00",
-        endTime: "17:00",
-      },
-    ],
+    socialMediaUrl: "",
+    operatingHours: [{ days: [], startTime: "9:00", endTime: "17:00" }],
     houseStreet: "",
     barangay: "",
     city: "",
@@ -86,6 +111,7 @@ export default function ServiceSetupPage() {
   const [services, setServices] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -96,19 +122,45 @@ export default function ServiceSetupPage() {
   };
 
   const toggleDay = (slotIndex, day) => {
-    setBusinessInfo((prev) => ({
-      ...prev,
-      operatingHours: prev.operatingHours.map((slot, i) =>
-        i === slotIndex
-          ? {
-              ...slot,
-              days: slot.days.includes(day)
-                ? slot.days.filter((d) => d !== day)
-                : [...slot.days, day],
-            }
-          : slot
-      ),
-    }));
+    setBusinessInfo((prev) => {
+      const dayUsedInOtherSlot = prev.operatingHours.some(
+        (slot, i) => i !== slotIndex && slot.days.includes(day)
+      );
+      if (dayUsedInOtherSlot) return prev;
+      
+      return {
+        ...prev,
+        operatingHours: prev.operatingHours.map((slot, i) =>
+          i === slotIndex
+            ? {
+                ...slot,
+                days: slot.days.includes(day)
+                  ? slot.days.filter((d) => d !== day)
+                  : [...slot.days, day],
+              }
+            : slot
+        ),
+      };
+    });
+  };
+
+  const isDayDisabled = (slotIndex, day) => {
+    return businessInfo.operatingHours.some(
+      (slot, i) => i !== slotIndex && slot.days.includes(day)
+    );
+  };
+
+  const getAllAssignedDays = () => {
+    const assignedDays = new Set();
+    businessInfo.operatingHours.forEach((slot) => {
+      slot.days.forEach((day) => assignedDays.add(day));
+    });
+    return assignedDays;
+  };
+
+  const canAddMoreSlots = () => {
+    const assignedDays = getAllAssignedDays();
+    return assignedDays.size < 7;
   };
 
   const handleTimeChange = (slotIndex, type, value) => {
@@ -123,10 +175,7 @@ export default function ServiceSetupPage() {
   const addTimeSlot = () => {
     setBusinessInfo((prev) => ({
       ...prev,
-      operatingHours: [
-        ...prev.operatingHours,
-        { days: [], startTime: "9:00", endTime: "17:00" },
-      ],
+      operatingHours: [...prev.operatingHours, { days: [], startTime: "9:00", endTime: "17:00" }],
     }));
   };
 
@@ -208,7 +257,7 @@ export default function ServiceSetupPage() {
         name: "",
         description: "",
         notes: "",
-        options: [{ petType: "dog", size: "xs", weightRange: "", price: "" }],
+        options: [{ petType: "dog", size: "xs", weightRange: "", minWeight: "", maxWeight: "", price: "" }],
       },
     ]);
   };
@@ -231,7 +280,7 @@ export default function ServiceSetupPage() {
               ...service,
               options: [
                 ...service.options,
-                { petType: "dog", size: "xs", weightRange: "", price: "" },
+                { petType: "dog", size: "xs", weightRange: "", minWeight: "", maxWeight: "", price: "" },
               ],
             }
           : service
@@ -258,13 +307,101 @@ export default function ServiceSetupPage() {
         i === serviceIndex
           ? {
               ...service,
-              options: service.options.map((opt, j) =>
-                j === optionIndex ? { ...opt, [field]: value } : opt
-              ),
+              options: service.options.map((opt, j) => {
+                if (j === optionIndex) {
+                  const updated = { ...opt, [field]: value };
+                  
+                  if (field === "weightRange") {
+                    if ((opt.size === "cat" || opt.size === "all") && (value.toLowerCase().trim() === "n/a" || value.trim() === "0")) {
+                      updated.minWeight = 0;
+                      updated.maxWeight = 0;
+                      updated.weightRange = "N/A";
+                    } else {
+                      const match = value.match(/(\d+\.?\d*)\s*(?:kg|kgs?)?\s*-\s*(\d+\.?\d*)\s*(?:kg|kgs?)?/i);
+                      if (match) {
+                        const min = parseFloat(match[1]);
+                        const max = parseFloat(match[2]);
+                        
+                        if (min < 1) {
+                          updated.minWeight = "";
+                          updated.maxWeight = "";
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            [`weight_${serviceIndex}_${optionIndex}`]: "Minimum weight must be at least 1 kg"
+                          }));
+                        } else if (max <= min) {
+                          updated.minWeight = "";
+                          updated.maxWeight = "";
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            [`weight_${serviceIndex}_${optionIndex}`]: "Maximum weight must be greater than minimum weight"
+                          }));
+                        } else {
+                          updated.minWeight = min;
+                          updated.maxWeight = max;
+                          setValidationErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`weight_${serviceIndex}_${optionIndex}`];
+                            return newErrors;
+                          });
+                        }
+                      } else {
+                        updated.minWeight = "";
+                        updated.maxWeight = "";
+                      }
+                    }
+                  }
+                  
+                  return updated;
+                }
+                return opt;
+              }),
             }
           : service
       )
     );
+  };
+
+  const isSizeDisabledForService = (serviceIndex, optionIndex, petType, size) => {
+    const service = services[serviceIndex];
+    if (!service) return false;
+    
+    return service.options.some(
+      (opt, i) => i !== optionIndex && opt.petType === petType && opt.size === size
+    );
+  };
+
+  const checkWeightRangeOverlap = (serviceIndex, optionIndex) => {
+    const service = services[serviceIndex];
+    if (!service) return null;
+    
+    const currentOption = service.options[optionIndex];
+    if (!currentOption.minWeight || !currentOption.maxWeight || !currentOption.petType) {
+      return null;
+    }
+    
+    for (let i = 0; i < service.options.length; i++) {
+      if (i === optionIndex) continue;
+      
+      const otherOption = service.options[i];
+      if (otherOption.petType !== currentOption.petType) continue;
+      if (!otherOption.minWeight || !otherOption.maxWeight) continue;
+      
+      const currentMin = parseFloat(currentOption.minWeight);
+      const currentMax = parseFloat(currentOption.maxWeight);
+      const otherMin = parseFloat(otherOption.minWeight);
+      const otherMax = parseFloat(otherOption.maxWeight);
+      
+      if (
+        (currentMin > otherMin && currentMin < otherMax) ||
+        (currentMax > otherMin && currentMax < otherMax) ||
+        (currentMin < otherMin && currentMax > otherMax)
+      ) {
+        return `Overlaps with ${otherOption.size === "all" ? "All Sizes" : otherOption.size.toUpperCase()} (${otherMin}-${otherMax} kg)`;
+      }
+    }
+    
+    return null;
   };
 
   const handleNext = (e) => {
@@ -293,23 +430,184 @@ export default function ServiceSetupPage() {
     setStep(1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateServiceInfo(services)) {
-      setValidationErrors({});
+    setIsSubmitting(true);
+    setValidationErrors({});
+
+    try {
+      // 🔑 Get the logged-in user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error("User not authenticated");
+      }
+
+      // ✅ Upload helper — stores inside the user’s folder for security
+      const uploadFile = async (folder, file) => {
+        if (!file) return null;
+        const filePath = `${user.id}/${folder}/${Date.now()}_${file.name}`;
+        const { error } = await supabase.storage
+          .from("service_provider_uploads")
+          .upload(filePath, file);
+        if (error) throw error;
+        const { data: publicUrlData } = supabase.storage
+          .from("service_provider_uploads")
+          .getPublicUrl(filePath);
+        return publicUrlData.publicUrl;
+      };
+
+      // 📁 Upload all required files
+      const waiverUrl = await uploadFile("waivers", waiverFile);
+      const permitUrl = await uploadFile("permits", businessPermitFile);
+
+      const facilityUrls = [];
+      for (const file of facilityImages) {
+        const url = await uploadFile("facilities", file);
+        if (url) facilityUrls.push(url);
+      }
+
+      const paymentUrls = [];
+      for (const file of paymentChannelFiles) {
+        const url = await uploadFile("payments", file);
+        if (url) paymentUrls.push(url);
+      }
+
+      // 🏢 Insert into service_providers table
+      const { data: providerData, error: providerError } = await supabase
+        .from("service_providers")
+        .insert([
+          {
+            user_id: user.id,
+            business_name: businessInfo.businessName,
+            business_email: businessInfo.businessEmail,
+            business_mobile: businessInfo.businessMobile,
+            house_street: businessInfo.houseStreet,
+            barangay: businessInfo.barangay,
+            city: businessInfo.city,
+            province: businessInfo.province,
+            postal_code: businessInfo.postalCode,
+            country: businessInfo.country,
+            type_of_service: businessInfo.typeOfService,
+            waiver_url: waiverUrl,
+            social_media_url: businessInfo.socialMediaUrl,
+            status: "pending",
+          },
+        ])
+        .select()
+        .single();
+
+      if (providerError) throw providerError;
+      const providerId = providerData.id;
+
+      // 🕒 Insert operating hours
+      const hoursData = [];
+      businessInfo.operatingHours.forEach((slot) => {
+        slot.days.forEach((day) => {
+          hoursData.push({
+            provider_id: providerId,
+            day_of_week: day,
+            start_time: slot.startTime,
+            end_time: slot.endTime,
+          });
+        });
+      });
+      if (hoursData.length > 0) {
+        const { error: hoursError } = await supabase
+          .from("service_provider_hours")
+          .insert(hoursData);
+        if (hoursError) throw hoursError;
+      }
+
+      // 🖼️ Insert facility images
+      for (const url of facilityUrls) {
+        await supabase.from("service_provider_images").insert({
+          provider_id: providerId,
+          image_url: url,
+        });
+      }
+
+      // 💳 Insert payment channels
+      for (const url of paymentUrls) {
+        await supabase.from("service_provider_payments").insert({
+          provider_id: providerId,
+          method_type: "QR",
+          file_url: url,
+        });
+      }
+
+      // 📜 Insert permit file
+      if (permitUrl) {
+        await supabase.from("service_provider_permits").insert({
+          provider_id: providerId,
+          permit_type: "Business Permit",
+          file_url: permitUrl,
+        });
+      }
+
+      // 👷 Insert employees
+      for (const emp of employees) {
+        await supabase.from("service_provider_staff").insert({
+          provider_id: providerId,
+          full_name: emp.fullName,
+          job_title: emp.position,
+        });
+      }
+
+      // 🧴 Insert services and options
+      for (const service of services) {
+        const { data: serviceData, error: serviceError } = await supabase
+          .from("services")
+          .insert([
+            {
+              provider_id: providerId,
+              type: service.type,
+              name: service.name,
+              description: service.description,
+              notes: service.notes,
+            },
+          ])
+          .select()
+          .single();
+
+        if (serviceError) throw serviceError;
+        const serviceId = serviceData.id;
+
+        const optionsData = service.options.map((opt) => ({
+          service_id: serviceId,
+          pet_type: opt.petType,
+          size: opt.size,
+          weight_range: opt.weightRange,
+          price: parseFloat(opt.price),
+        }));
+
+        const { error: optionsError } = await supabase
+          .from("service_options")
+          .insert(optionsData);
+        if (optionsError) throw optionsError;
+      }
+
+      // ✅ Success Modal
       setModalOpen(true);
-    } else {
-      setValidationErrors((prev) => ({
-        ...prev,
-        step2: "Please add at least one service and fill all required fields.",
-      }));
+    } catch (error) {
+      console.error("❌ Submission Error:", error);
+      setValidationErrors({
+        step2: error.message || "Submission failed. Try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // 🎉 Modal close handler
   const handleModalClose = () => {
     setModalOpen(false);
     window.location.href = "/dashboard";
   };
+
 
   return (
     <>
@@ -366,24 +664,40 @@ export default function ServiceSetupPage() {
                 </div>
 
                 <div className="form-group">
+                  <label>Facebook / Instagram / Website URL</label>
+                  <input
+                    type="url"
+                    name="socialMediaUrl"
+                    value={businessInfo.socialMediaUrl}
+                    onChange={handleBusinessChange}
+                    placeholder="https://facebook.com/yourpage or https://instagram.com/yourpage or https://yourwebsite.com"
+                  />
+                  <small className="file-hint">Optional: Enter your Facebook, Instagram, or website link</small>
+                </div>
+
+                <div className="form-group">
                   <label>
                     Operating Hours <span className="required">*</span>
                   </label>
                   {businessInfo.operatingHours.map((slot, slotIndex) => (
                     <div key={slotIndex} className="operating-hours">
                       <div className="day-selector">
-                        {daysOfWeek.map((day, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            className={`day-btn ${
-                              slot.days.includes(dayNames[i]) ? "active" : ""
-                            }`}
-                            onClick={() => toggleDay(slotIndex, dayNames[i])}
-                          >
-                            {day}
-                          </button>
-                        ))}
+                        {daysOfWeek.map((day, i) => {
+                          const isDisabled = isDayDisabled(slotIndex, dayNames[i]);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              className={`day-btn ${
+                                slot.days.includes(dayNames[i]) ? "active" : ""
+                              } ${isDisabled ? "disabled" : ""}`}
+                              onClick={() => toggleDay(slotIndex, dayNames[i])}
+                              disabled={isDisabled}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
                       </div>
                       <div className="time-selector">
                         <input
@@ -414,9 +728,17 @@ export default function ServiceSetupPage() {
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={addTimeSlot} className="add-timeslot-btn">
+                  <button 
+                    type="button" 
+                    onClick={addTimeSlot} 
+                    className="add-timeslot-btn"
+                    disabled={!canAddMoreSlots()}
+                  >
                     + Add timeslot
                   </button>
+                  {!canAddMoreSlots() && (
+                    <small className="info-message">All days of the week are assigned to time slots</small>
+                  )}
                 </div>
               </div>
 
@@ -653,7 +975,7 @@ export default function ServiceSetupPage() {
                         className="remove-btn"
                       >
                         <X size={16} />
-                      </button>
+                        </button>
                     </div>
                   )}
                 </div>
@@ -812,11 +1134,9 @@ export default function ServiceSetupPage() {
                                 }
                                 required
                               >
-                                {petTypes.map((type) => (
-                                  <option key={type} value={type}>
-                                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                                  </option>
-                                ))}
+                                <option value="dog">Dog</option>
+                                <option value="cat">Cat</option>
+                                <option value="dog-cat">Dog and Cat</option>
                               </select>
                             </div>
                             <div className="form-group">
@@ -835,11 +1155,23 @@ export default function ServiceSetupPage() {
                                 }
                                 required
                               >
-                                {petSizes.map((size) => (
-                                  <option key={size} value={size}>
-                                    {size.toUpperCase()}
-                                  </option>
-                                ))}
+                                {petSizes.map((size) => {
+                                  const isDisabled = isSizeDisabledForService(
+                                    serviceIndex,
+                                    optionIndex,
+                                    option.petType,
+                                    size
+                                  );
+                                  let label = size.toUpperCase();
+                                  if (size === "all") label = "All Sizes";
+                                  
+                                  return (
+                                    <option key={size} value={size} disabled={isDisabled}>
+                                      {label}
+                                      {isDisabled ? " (already used)" : ""}
+                                    </option>
+                                  );
+                                })}
                               </select>
                             </div>
                             <div className="form-group">
@@ -857,9 +1189,30 @@ export default function ServiceSetupPage() {
                                     e.target.value
                                   )
                                 }
-                                placeholder="1 kg - 5 kg"
+                                placeholder={option.size === "cat" || option.size === "all" ? "N/A or 1 - 5 kg" : "1 - 5 kg"}
                                 required
                               />
+                              {(option.size === "cat" || option.size === "all") && (
+                                <small className="info-message">
+                                  For {option.size === "all" ? "all sizes" : "cat size"}, you can enter "N/A" or "0"
+                                </small>
+                              )}
+                              {option.minWeight && option.maxWeight && (
+                                <small className="info-message">
+                                  Range: {option.minWeight} kg to {option.maxWeight} kg
+                                </small>
+                              )}
+                              {validationErrors[`weight_${serviceIndex}_${optionIndex}`] && (
+                                <small className="error-message">
+                                  {validationErrors[`weight_${serviceIndex}_${optionIndex}`]}
+                                </small>
+                              )}
+                              {(() => {
+                                const overlapError = checkWeightRangeOverlap(serviceIndex, optionIndex);
+                                return overlapError && (
+                                  <small className="error-message">{overlapError}</small>
+                                );
+                              })()}
                             </div>
                             <div className="form-group">
                               <label>
@@ -932,8 +1285,8 @@ export default function ServiceSetupPage() {
                 <button type="button" onClick={handleBack} className="btn-back">
                   <span>←</span> Back
                 </button>
-                <button type="submit" className="btn-submit">
-                  Submit Application
+                <button type="submit" className="btn-submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
                 </button>
               </div>
             </form>
@@ -947,55 +1300,6 @@ export default function ServiceSetupPage() {
                   <p className="modal-text">
                     We'll review it and notify you once your application is approved
                   </p>
-                  <div className="modal-illustration">
-                    <svg viewBox="0 0 800 200" className="pets-illustration">
-                      <g>
-                        <circle cx="100" cy="100" r="50" fill="#FF9966" />
-                        <path d="M 80 80 L 70 70 M 120 80 L 130 70" stroke="#000" strokeWidth="2" fill="none" />
-                        <circle cx="90" cy="90" r="3" fill="#000" />
-                        <circle cx="110" cy="90" r="3" fill="#000" />
-                        <path d="M 85 105 Q 100 110 115 105" stroke="#000" strokeWidth="2" fill="none" />
-                        <line x1="70" y1="105" x2="50" y2="100" stroke="#000" strokeWidth="2" />
-                        <line x1="70" y1="110" x2="50" y2="110" stroke="#000" strokeWidth="2" />
-                        <line x1="130" y1="105" x2="150" y2="100" stroke="#000" strokeWidth="2" />
-                        <line x1="130" y1="110" x2="150" y2="110" stroke="#000" strokeWidth="2" />
-                      </g>
-
-                      <g>
-                        <circle cx="250" cy="100" r="50" fill="#C4A484" />
-                        <ellipse cx="230" cy="70" rx="15" ry="25" fill="#8B6F47" />
-                        <ellipse cx="270" cy="70" rx="15" ry="25" fill="#8B6F47" />
-                        <circle cx="240" cy="90" r="3" fill="#000" />
-                        <circle cx="260" cy="90" r="3" fill="#000" />
-                        <ellipse cx="250" cy="105" rx="8" ry="10" fill="#000" />
-                        <path d="M 245 115 Q 250 118 255 115" stroke="#000" strokeWidth="2" fill="none" />
-                      </g>
-
-                      <g>
-                        <ellipse cx="420" cy="100" r="50" fill="#000" />
-                        <path d="M 390 70 L 380 60 M 420 85 L 410 75" stroke="#FFF" strokeWidth="2" fill="none" />
-                        <circle cx="400" cy="90" r="3" fill="#FFF" />
-                        <circle cx="420" cy="90" r="3" fill="#FFF" />
-                        <path d="M 450 95 L 470 90" stroke="#FF6B9D" strokeWidth="3" />
-                        <ellipse cx="415" cy="105" rx="6" ry="8" fill="#FFF" />
-                        <path d="M 410 115 Q 415 118 420 115" stroke="#FFF" strokeWidth="2" fill="none" />
-                        <circle cx="460" cy="95" r="8" fill="#FF6B9D" />
-                      </g>
-
-                      <g>
-                        <circle cx="600" cy="100" r="50" fill="#E8D4C0" />
-                        <ellipse cx="580" cy="70" rx="15" ry="25" fill="#C4A484" />
-                        <ellipse cx="620" cy="70" rx="15" ry="25" fill="#C4A484" />
-                        <circle cx="555" cy="85" r="18" fill="#8B6F47" />
-                        <circle cx="645" cy="85" r="18" fill="#8B6F47" />
-                        <circle cx="590" cy="95" r="3" fill="#000" />
-                        <circle cx="610" cy="95" r="3" fill="#000" />
-                        <ellipse cx="600" cy="110" rx="8" ry="10" fill="#000" />
-                        <path d="M 595 120 Q 600 123 605 120" stroke="#000" strokeWidth="2" fill="none" />
-                        <circle cx="615" cy="108" r="8" fill="#FFB6C1" />
-                      </g>
-                    </svg>
-                  </div>
                   <button onClick={handleModalClose} className="btn-return">
                     Return to home
                   </button>
