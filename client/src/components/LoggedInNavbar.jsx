@@ -8,35 +8,91 @@ import "../styles/components/LoggedInNavbar.css";
 
 const LoggedInNavbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [user, setUser] = useState(null);
   const [userName, setUserName] = useState("");
   const dropdownRef = useRef(null);
+  const notifRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // fetch user
+  // Fetch user and initial notifications
   useEffect(() => {
     const fetchUser = async () => {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
+        setUser(data.user);
         setUserName(
           data.user.user_metadata?.display_name ||
             `${data.user.email?.split("@")[0]}`
         );
+        fetchNotifications(data.user.id);
       }
     };
     fetchUser();
   }, []);
 
-  // close dropdown when clicking outside
+  // Fetch notifications
+  const fetchNotifications = async (userId) => {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("recipient_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (!error) setNotifications(data || []);
+  };
+
+  // Realtime notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("realtime-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev].slice(0, 5));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setDropdownOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Mark as read
+  const markAsRead = async (id) => {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  };
 
   // logout
   const handleLogout = async () => {
@@ -67,9 +123,40 @@ const LoggedInNavbar = () => {
           )}
 
           {/* Notifications */}
-          <button className="icon-btn">
-            <FaBell className="icon" />
-          </button>
+          <div className="notification-wrapper" ref={notifRef}>
+            <button
+              className="icon-btn"
+              onClick={() => setNotifOpen(!notifOpen)}
+            >
+              <FaBell className="icon" />
+              {notifications.some((n) => !n.is_read) && (
+                <span className="notif-dot"></span>
+              )}
+            </button>
+            {notifOpen && (
+              <div className="notif-dropdown">
+                {notifications.length === 0 ? (
+                  <p className="notif-empty">No notifications</p>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`notif-item ${
+                        notif.is_read ? "read" : "unread"
+                      }`}
+                      onClick={() => markAsRead(notif.id)}
+                    >
+                      <strong>{notif.title}</strong>
+                      <p>{notif.message}</p>
+                      <small>
+                        {new Date(notif.created_at).toLocaleString()}
+                      </small>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Account dropdown */}
           <div className="account-menu" ref={dropdownRef}>

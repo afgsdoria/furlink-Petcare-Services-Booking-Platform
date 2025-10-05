@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "./config/supabase";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./pages/auth/LandingPage";
 import SignUpPage from "./pages/auth/SignUpPage";
@@ -10,45 +9,22 @@ import AboutPage from "./pages/auth/AboutPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ServiceSetupPage from "./pages/ServiceSetupPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProviderDetails from "./pages/admin/AdminProviderDetails";
 import AdminChangePassword from "./pages/admin/AdminChangePassword";
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // ✅ Listen to auth state changes
-  useEffect(() => {
-    const currentSession = supabase.auth.getSession();
-    currentSession.then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <div className="loading-screen">Loading...</div>;
-  }
-
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/about" element={<AboutPage />} />
 
-        {/* User Protected Routes */}
+        {/* User routes */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute session={session}>
+            <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -56,32 +32,39 @@ function App() {
         <Route
           path="/service-setup"
           element={
-            <ProtectedRoute session={session}>
+            <ProtectedRoute>
               <ServiceSetupPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Admin Protected Routes */}
+        {/* Admin routes */}
         <Route
           path="/admin-dashboard"
           element={
-            <ProtectedRoute session={session} adminOnly={true}>
+            <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/provider/:id"
+          element={
+            <ProtectedRoute>
+              <AdminProviderDetails />
             </ProtectedRoute>
           }
         />
         <Route
           path="/admin-change-password"
           element={
-            <ProtectedRoute session={session} adminOnly={true}>
+            <ProtectedRoute>
               <AdminChangePassword />
             </ProtectedRoute>
           }
         />
 
-        {/* Redirect unknown routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Router>
   );
