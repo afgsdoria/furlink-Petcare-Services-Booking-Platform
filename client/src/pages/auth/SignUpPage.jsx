@@ -37,8 +37,8 @@ const SignUpPage = () => {
   const validate = () => {
     let newErrors = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First Name is required.";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last Name is required.";
+    if (!formData.firstName.trim()) newErrors.firstName = "First name is required.";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required.";
     if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
       newErrors.email = "Enter a valid email address.";
     if (!formData.mobile.match(/^(09\d{9}|\+639\d{9})$/))
@@ -143,7 +143,7 @@ const SignUpPage = () => {
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Create Your Account</h2>
           <p className="subtitle">
-            Join FurLink and give your pet the premium care they deserve.
+            You are a step closer to a hassle-free booking experience
           </p>
 
           <div className="form-row">
@@ -254,7 +254,7 @@ const SignUpPage = () => {
           {errors.general && <p className="error general">{errors.general}</p>}
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Creating..." : "Create Account"}
+            {loading ? "Creating..." : "Register"}
           </button>
 
           {/* Link to Login */}

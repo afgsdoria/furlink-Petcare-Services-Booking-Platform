@@ -126,7 +126,7 @@
 .signup-form .btn-primary {
   width: 100%;
   padding: 0.85rem;
-  background: var(--gradient-primary, linear-gradient(135deg, #2563eb, #1d4ed8));
+  background: #0E2679;
   color: var(--white);
   border: none;
   border-radius: 0.75rem;
@@ -134,6 +134,10 @@
   font-size: 1rem;
   cursor: pointer;
   transition: var(--transition);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .signup-form .btn-primary:hover {

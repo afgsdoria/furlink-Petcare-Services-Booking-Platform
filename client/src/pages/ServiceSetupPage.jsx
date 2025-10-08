@@ -664,15 +664,14 @@ export default function ServiceSetupPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Facebook / Instagram / Website URL</label>
+                  <label>Social Media URL</label>
                   <input
                     type="url"
                     name="socialMediaUrl"
                     value={businessInfo.socialMediaUrl}
                     onChange={handleBusinessChange}
-                    placeholder="https://facebook.com/yourpage or https://instagram.com/yourpage or https://yourwebsite.com"
                   />
-                  <small className="file-hint">Optional: Enter your Facebook, Instagram, or website link</small>
+                  <small className="file-hint">Enter your Facebook, Instagram, or website link</small>
                 </div>
 
                 <div className="form-group">

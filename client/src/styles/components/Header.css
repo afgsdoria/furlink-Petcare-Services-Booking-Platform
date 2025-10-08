@@ -1,55 +1,89 @@
-/* Header Wrapper */
+/* ===== Header Wrapper ===== */
+.header-wrapper {
+  width: 100%;
+  background: transparent; /* keep outer area matching page background */
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  top: 1rem;
+  z-index: 1000;
+}
+
+/* ===== Inner Header ===== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  background-color: #ffffff;
+  border-radius: 50px; /* pill shape */
+  padding: 0.8rem 2rem;
+  width: 100%;
+  max-width: 1200px; /* consistent size across pages */
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Left Logo Section */
+/* ===== Page Background ===== */
+body {
+  background-color: #0E2679; /* your dark blue */
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Logo Section ===== */
 .header-left img.header-logo {
-  height: 65px;   /* match your Figma height */
-  width: auto;    /* keep proportions */
-  max-width: 120px;
+  height: 48px;
+  width: auto;
   object-fit: contain;
   cursor: pointer;
 }
 
-/* Navigation Links */
+/* ===== Navigation Links ===== */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 2rem;
 }
 
 .nav-link {
   text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  font-size: 16px;
-  transition: color 0.2s ease-in-out;
+  color: #0E2679;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: color 0.3s ease-in-out;
 }
 
 .nav-link:hover {
-  color: #007bff;
+  color: #FDBF00; /* yellow hover accent */
 }
 
-/* Signup Button */
+/* ===== Signup Button ===== */
 .btn-signup {
-  background: linear-gradient(135deg, #007bff, #6a11cb);
+  background: #0E2679;
   color: #fff;
   font-weight: 600;
-  padding: 8px 18px;
-  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  border-radius: 2rem;
   text-decoration: none;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .btn-signup:hover {
-  background: linear-gradient(135deg, #0056b3, #520a99);
+  background: #142fa3;
+  transform: translateY(-2px);
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    max-width: 95%;
+  }
+
+  .header-right {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }

@@ -107,13 +107,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-page min-h-screen flex flex-col justify-between">
       <Header hideLogin={true} />
 
-      <div className="login-container">
+      <div className="login-container flex-grow flex items-center justify-center py-8">
         <form className="login-form" onSubmit={handleSubmit}>
-          <h2>Welcome Back</h2>
-          <p className="subtitle">Login to access your FurLink account</p>
+          <h2>Login to <i>furlink</i></h2>
+          <p className="subtitle">You are a step closer to a hassle-free booking experience</p>
 
           <div className="form-group">
             <input
@@ -151,7 +151,7 @@ const LoginPage = () => {
           </button>
 
           <p className="redirect-text">
-            Don’t have an account?{" "}
+            You do not have an account registered.{" "}
             <span className="redirect-link" onClick={() => navigate("/signup")}>
               Sign up here
             </span>

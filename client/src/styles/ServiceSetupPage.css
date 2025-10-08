@@ -13,8 +13,9 @@
   font-size: 2.5rem;
   font-weight: 700;
   color: #1e3a8a;
+  margin-top: 2rem;
   margin-bottom: 2rem;
-  text-align: left;
+  text-align: center;
 }
 
 .setup-form {
@@ -123,7 +124,7 @@
 .day-btn {
   width: 48px;
   height: 48px;
-  border: 2px solid #d1d5db;
+  border: 2px #d1d5db;
   border-radius: 50%;
   background: white;
   font-weight: 600;
@@ -386,10 +387,13 @@
 }
 
 .btn-primary {
-  padding: 0.875rem 3rem;
-  background-color: #1e3a8a;
-  color: white;
-  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  background: white;
+  color: #0E2679;
+  border: 2px solid #0E2679;
   border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
@@ -398,10 +402,9 @@
   margin-left: auto;
 }
 
-.btn-primary:hover {
-  background-color: #1e40af;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+.btn-primaryk:hover {
+  border-color: #1e3a8a;
+  color: #0E2679;
 }
 
 .btn-back {
